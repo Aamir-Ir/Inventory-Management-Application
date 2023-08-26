@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add New Customer</title>
+    <style>
+        body {
+            font-family: Century, sans-serif;
+            font-size: 20px;
+            background-color: #e6e6e6;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .navbar {
+            background-color: #333;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .navbar a {
+            float: left;
+            display: block;
+            color: white;
+            text-align: center;
+            padding: 14px 16px;
+            text-decoration: none;
+        }
+
+        .navbar a:hover {
+            background-color: #ff0000;
+            color: black;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+            width: 60%;
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .container a {
+            text-decoration: none;
+        }
+
+        /* Create a grid layout for form elements */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); /* Two columns */
+            gap: 20px; /* Gap between grid items */
+        }
+
+        .form-group {
+            text-align: left;
+        }
+
+        .form-group label {
+            font-weight: bold;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="number"] {
+            width: 90%; /* Make inputs and select full width of their container */
+            padding: 8px;
+            margin-bottom: 15px;
+        }
+
+        .form-group select {
+            width: 95%; /* Make inputs and select full width of their container */
+            padding: 8px;
+            margin-bottom: 15px;
+        }
+
+        .container button {
+            width: 40%;
+            font-size: 15px;
+            background-color: #000000;
+            color: #fff;
+            border: none;
+            padding: 10px;
+            margin-bottom: 15px; /* Add spacing between buttons */
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .container button:hover {
+            background-color: #ff0000;
+        }
+
+        .table_container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .table_container input[type="text"] {
+            width: 70%;
+            padding: 8px;
+            margin-bottom: 15px;
+        }
+
+        .filter-container {
+            background-color: #fff;
+            padding: 20px;
+            width: 90%;
+            text-align: left;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: 80%;
+            padding: 8px;
+            margin-bottom: 15px;
+        }
+
+        /* Flash message container */
+        .flashes-container {
+            width: 100%;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        /* Flash message list */
+        .flashes {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        /* Flash message item */
+        .flashes li {
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+            display: inline-block;
+            width: 100%;
+        }
+
+        /* Success message */
+        .flashes .success {
+            background-color: #4CAF50; /* Green */
+            color: #ffffff; /* White */
+        }
+
+        /* Info message */
+        .flashes .info {
+            background-color: #F44336; 
+            color: #ffffff; /* White */
+        }
+
+        /* Error message */
+        .flashes .error {
+            background-color: #2196F3 /* Blue */
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <a href="/">Home</a>
+        <a href="/raw_materials">Raw Material</a>
+        <a href="/packaging_materials">Packaging Material</a>
+        <a href="/finished_products">Finished Products</a>
+        <a href="/work_order">Work Orders</a>
+        <a href="/user_options">User Options</a>
+        <a href="/logout">Logout</a>
+    </div>
+
+    <!-- Add this section at the top of your HTML template -->
+    <div class="flashes-container">
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <ul class="flashes">
+            {% for message in messages %}
+            <li class="{{ message[1] }}">{{ message[0] }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% endwith %}
+    </div>
+
+    <div class="container">
+        <h1>Add A New Customer</h1>
+
+        <!-- Form to add a new customer -->
+        <form method="post" action="/create_new_customer">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="contact_name">Contact Name:</label>
+                    <input type="text" id="contact_name" name="contact_name" required placeholder="Enter Contact Name...">
+                </div>
+
+                <div class="form-group">
+                    <label for="company_name">Company Name:</label>
+                    <input type="text" id="company_name" name="company_name" required placeholder="Enter Company Name...">
+                </div>
+
+                <div class="form-group">
+                    <label for="phone_number">Phone Number:</label>
+                    <input type="text" id="phone_number" name="phone_number" required placeholder="Enter Phone Number...">
+                </div>
+
+                <div class="form-group">
+                    <label for="email_address">Email Address:</label>
+                    <input type="text" id="email_address" name="email_address" required placeholder="Enter Email Address...">
+                </div>
+
+                <div class="form-group">
+                    <label for="shipping_address">Shipping Address:</label>
+                    <input type="text" id="shipping_address" name="shipping_address" required placeholder="Enter Shipping Address...">
+                </div>
+
+            </div>
+            <br>
+            <button type="submit">Add Customer</button>
+        </form>
+    </div>
+
+    <div class="table_container">
+        <h1>Customer Table</h1>
+        <label for="showRemoved">Show Removed</label>
+        <input type="checkbox" id="showRemoved" onchange="toggleRemoved()">
+        <br><br>
+
+        <div class="filter-container">
+            <!-- Filter by Contact Name -->
+            <label for="filterContactName">Filter by Contact Name:</label>
+            <input type="text" id="filterContactName" onkeyup="filterTable()" placeholder="Search for Contact Name...">
+            <br>
+
+            <!-- Filter by Company Name -->
+            <label for="filterCompanyName">Filter by Company Name:</label>
+            <input type="text" id="filterCompanyName" onkeyup="filterTable()" placeholder="Search for Company Name...">
+            <br>
+
+            <!-- Filter by Phone Number -->
+            <label for="filterPhoneNumber">Filter by Phone Number:</label>
+            <input type="text" id="filterPhoneNumber" onkeyup="filterTable()" placeholder="Search for Phone #...">
+            <br>
+
+            <!-- Filter by Email Address -->
+            <label for="filterEmail">Filter by Email Address:</label>
+            <input type="text" id="filterEmail" onkeyup="filterTable()" placeholder="Search for Company Email...">
+            <br>
+
+            <!-- Filter by Shipping Address -->
+            <label for="filterShippingAddress">Filter by Shipping Address:</label>
+            <input type="text" id="filterShippingAddress" onkeyup="filterTable()" placeholder="Search for Shipping Address...">
+            <br>
+
+            <!-- Filter by Removed -->
+            <label for="filterRemoved">Filter by Removed:</label>
+            <input type="text" id="filterRemoved" onkeyup="filterTable()" placeholder="Search for Removed...">
+            <br>
+
+        </div>
+        <br>
+    
+        <!-- Table for existing customers -->
+        <table id="customerTable" border="1">
+            <thead>
+                <tr>
+                    <th>Customer ID</th>
+                    <th>Contact Name</th>
+                    <th>Company Name</th>
+                    <th>Phone Number</th>
+                    <th>Email Address</th>
+                    <th>Shipping Address</th>
+                    <th>Removed</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for customer in data %}
+                <tr class="{% if customer.REMOVED == 'T' %}removedRow{% endif %}">
+                    <td>{{ customer.CUSTOMERID }}</td>
+                    <td>{{ customer.CONTACT_NAME }}</td>
+                    <td>{{ customer.COMPANY_NAME }}</td>
+                    <td>{{ customer.PHONE_NUMBER }}</td>
+                    <td>{{ customer.EMAIL_ADDRESS }}</td>
+                    <td>{{ customer.SHIPPING_ADDRESS }}</td>
+                    <td>{{ customer.REMOVED }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+    </div>
+    
+    <script>
+        function filterTable() {
+            const filterContactName = document.getElementById("filterContactName").value.toUpperCase();
+            const filterCompanyName = document.getElementById("filterCompanyName").value.toUpperCase();
+            const filterPhoneNumber = document.getElementById("filterPhoneNumber").value.toUpperCase();
+            const filterEmailAddress = document.getElementById("filterEmail").value.toUpperCase();
+            const filterShippingAddress = document.getElementById("filterShippingAddress").value.toUpperCase();
+            const filterRemoved = document.getElementById("filterRemoved").value.toUpperCase();
+    
+            const table = document.getElementById("customerTable");
+            const rows = table.getElementsByTagName("tr");
+    
+            for (let i = 1; i < rows.length; i++) {
+                const cells = rows[i].getElementsByTagName("td");
+                const contactName = cells[1].textContent.trim().toUpperCase(); // Adjusted index to 1 for Contact Name
+                const companyName = cells[2].textContent.trim().toUpperCase(); // Adjusted index to 2 for Company Name
+                const phoneNumber = cells[3].textContent.trim().toUpperCase(); // Adjusted index to 3 for Phone Number
+                const emailAddress = cells[4].textContent.trim().toUpperCase(); // Adjusted index to 4 for Email Address
+                const shippingAddress = cells[5].textContent.trim().toUpperCase(); // Adjusted index to 5 for Shipping Address
+                const removedData = cells[6].textContent.trim().toUpperCase(); // Adjusted index to 6 for Removed
+    
+                const contactNameMatch = contactName.includes(filterContactName);
+                const companyNameMatch = companyName.includes(filterCompanyName);
+                const phoneNumberMatch = phoneNumber.includes(filterPhoneNumber);
+                const emailAddressMatch = emailAddress.includes(filterEmailAddress);
+                const shippingAddressMatch = shippingAddress.includes(filterShippingAddress);
+                const removedMatch = removedData.includes(filterRemoved);
+    
+                rows[i].style.display = contactNameMatch && companyNameMatch && phoneNumberMatch && emailAddressMatch && shippingAddressMatch && removedMatch ? "" : "none";
+            }
+        }
+    
+        function toggleRemoved() {
+            const showRemoved = document.getElementById("showRemoved").checked;
+            const rows = document.querySelector(".table_container").getElementsByTagName("tr");
+    
+            for (let i = 1; i < rows.length; i++) {
+                const removedCell = rows[i].querySelector('td:last-child');
+                if (showRemoved || removedCell.textContent.trim() === 'F') {
+                    rows[i].style.display = "table-row";
+                } else {
+                    rows[i].style.display = "none";
+                }
+            }
+        }
+    
+        document.addEventListener("DOMContentLoaded", function () {
+            document.getElementById("showRemoved").addEventListener("change", toggleRemoved);
+            toggleRemoved();
+        });
+    
+    </script>
+    
+</body>
+</html>
+
+
+

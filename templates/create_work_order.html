@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            font-family: Century, sans-serif;
+            font-size: 20px;
+            background-color: #e6e6e6;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .navbar {
+            background-color: #333;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .navbar a {
+            float: left;
+            display: block;
+            color: white;
+            text-align: center;
+            padding: 14px 16px;
+            text-decoration: none;
+        }
+
+        .navbar a:hover {
+            background-color: #ff0000;
+            color: black;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+            width: 70%;
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .container a {
+            text-decoration: none;
+        }
+
+        .container button {
+            width: 35%;
+            font-size: 15px;
+            background-color: #000000;
+            color: #fff;
+            border: none;
+            padding: 10px;
+            margin-bottom: 15px; /* Add spacing between buttons */
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .container button:hover {
+            background-color: #ff0000;
+        }
+
+        .table_container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .table_container input[type="text"] {
+            width: 70%;
+            padding: 8px;
+            margin-bottom: 15px;
+        }
+
+        .table_container button {
+            width: 35%;
+            font-size: 15px;
+            background-color: #000000;
+            color: #fff;
+            border: none;
+            padding: 10px;
+            margin-bottom: 15px; /* Add spacing between buttons */
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .table_container button:hover {
+            background-color: #ff0000;
+        }
+
+
+        .filter-container {
+            background-color: #fff;
+            padding: 20px;
+            width: 90%;
+            text-align: left;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: 60%;
+            padding: 8px;
+            margin-bottom: 15px;
+        }
+
+        /* Flash message container */
+        .flashes-container {
+            width: 100%;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        /* Flash message list */
+        .flashes {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        /* Flash message item */
+        .flashes li {
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+            display: inline-block;
+            width: 100%;
+        }
+
+        /* Success message */
+        .flashes .success {
+            background-color: #4CAF50; /* Green */
+            color: #ffffff; /* White */
+        }
+
+        /* Info message */
+        .flashes .info {
+            background-color: #F44336; 
+            color: #ffffff; /* White */
+        }
+
+        /* Error message */
+        .flashes .error {
+            background-color: #2196F3 /* Blue */
+        }
+    </style>
+</head>
+<body>
+    <!-- Header and Navigation -->
+    <div class="navbar">
+        <a href="/">Home</a>
+        <a href="/raw_materials">Raw Material</a>
+        <a href="/packaging_materials">Packaging Material</a>
+        <a href="/finished_products">Finished Products</a>
+        <a href="/work_order">Work Orders</a>
+        <a href="/user_options">User Options</a>
+        <a href="/logout">Logout</a>
+    </div>
+
+    <!-- Flash Messages -->
+    <div class="flashes-container">
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <ul class="flashes">
+            {% for message in messages %}
+            <li class="{{ message[1] }}">
+                {{ message[0] }}
+                <span class="close" onclick="this.parentElement.style.display='none'">&times;</span>
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Work Order Form -->
+    <div class="container">
+        <form method="post" action="/create_work_order">
+            <h1>Create A Work Order</h1>
+            <!-- Hidden input for entry count -->
+            <input type="hidden" id="entry_count" name="entry_count" value="1">
+            <label for="contact_name">Customer Contact Name:</label>
+            <input type="text" id="contact_name" name="contact_name" list="contact_nameOptions" required placeholder="Enter Customer Name...">
+            <datalist id="contact_nameOptions">
+                {% for contact in contact_list %}
+                    <option value="{{ contact }}">{{ contact }}</option>
+                {% endfor %}
+            </datalist>
+            <br>
+            
+            <label for="due_by">Due By (YYYY-MM-DD):</label>
+            <input type="text" id="due_by" name="due_by" required placeholder="Enter Date Due By (YYYY-MM-DD)" pattern="\d{4}-\d{2}-\d{2}">
+            
+            <h2>List of Requested Product Codes and Quantity</h2>
+            <!-- Dynamic rows for product code and quantity -->
+            <div id="product_rows">
+                <div class="product_row">
+                    <input type="text" name="product_code_1" list="product_code_1Options" required placeholder="Enter Product Name...">
+                    <datalist id="product_code_1Options">
+                        {% for code in codes %}
+                            <option value="{{ code }}">{{ code }}</option>
+                        {% endfor %}
+                    </datalist>
+                    
+                    <input type="number" name="quantity_1" placeholder="Quantity">
+                    <br>
+                    <button type="button" onclick="addProductRow()">+</button>
+                </div>
+            </div>
+            <br><br>
+            <button type="submit">Create Work Order</button>
+        </form>
+    </div>
+
+    <!-- Product Availability Information -->
+    {% if availability_info %}
+    <div class="table_container">
+        <h2>Product Availability Information:</h2>
+        <table>
+            <tr>
+                <th>Product Code</th>
+                <th>Available Quantity</th>
+                <th>Total Required</th> <!-- Add this header -->
+                <th>Status</th>
+            </tr>
+            {% for product_code, product_info in availability_info.items() %}
+                <tr>
+                    <td>{{ product_code }}</td>
+                    <td>{{ product_info.available_quantity }}</td>
+                    <td>{{ product_info.total_required }}</td> <!-- Display total required here -->
+                    <td class="{{ product_info.status }}">{{ product_info.status }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+
+        <!-- Print button for the table -->
+        <br>
+        <button id="printTableButton">Print Table</button>
+    </div>
+
+    <!-- Automatically print the table when it's generated -->
+    <script>
+    // Function to print the table
+    function printTable() {
+        var printWindow = window.open('', '', 'width=800,height=600');
+        printWindow.document.open();
+        printWindow.document.write('<html><head><title>Work Order # ____________</title></head><body>');
+        // printWindow.document.write('<h2>Product Availability Information:</h2>');
+        printWindow.document.write(document.querySelector('.table_container').innerHTML);
+        printWindow.document.write('</body></html>');
+        printWindow.document.close();
+        printWindow.print();
+        printWindow.close();
+    }
+
+    // Automatically call the printTable function when the page loads
+    window.addEventListener('load', printTable);
+    </script>
+    {% endif %}
+
+
+    <script>
+        let rowNum = 1;
+
+        function addProductRow() {
+            rowNum++;
+            const productRows = document.getElementById('product_rows');
+
+            const row = document.createElement('div');
+            row.className = 'product_row';
+            row.innerHTML = `
+                <input type="text" name="product_code_${rowNum}" list="product_code_${rowNum}Options" required placeholder="Enter Product Name...">
+                <datalist id="product_code_${rowNum}Options">
+                    {% for code in codes %}
+                        <option value="{{ code }}">{{ code }}</option>
+                    {% endfor %}
+                </datalist>
+
+                <input type="number" name="quantity_${rowNum}" placeholder="Quantity">
+                <br>
+                <button type="button" onclick="removeProductRow(this)">-</button>
+            `;
+
+            productRows.appendChild(row);
+
+            // Update the entry count in the hidden input field
+            document.getElementById('entry_count').value = rowNum;
+        }
+
+        function removeProductRow(button) {
+            const productRows = document.getElementById('product_rows');
+            productRows.removeChild(button.parentNode);
+            
+            // Update the entry count in the hidden input field
+            document.getElementById('entry_count').value = --rowNum;
+        }
+
+        // Function to print the table
+        document.getElementById('printTableButton').addEventListener('click', function () {
+            var printWindow = window.open('', '', 'width=800,height=600');
+            printWindow.document.open();
+            printWindow.document.write('<html><head><title>Work Order # ____________</title></head><body>');
+            printWindow.document.write(document.querySelector('.table_container').innerHTML);
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+            printWindow.print();
+            printWindow.close();
+        });
+    </script>
+
+</body>
+</html>

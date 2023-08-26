@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Receive Packaging Materials</title>
+    <style>
+                body {
+            font-family: Century, sans-serif;
+            font-size: 20px;
+            background-color: #e6e6e6;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .navbar {
+            background-color: #333;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .navbar a {
+            float: left;
+            display: block;
+            color: white;
+            text-align: center;
+            padding: 14px 16px;
+            text-decoration: none;
+        }
+
+        .navbar a:hover {
+            background-color: #ff0000;
+            color: black;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+            width: 40%;
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .container a {
+            text-decoration: none;
+        }
+
+        .container button {
+            width: 40%;
+            font-size: 15px;
+            background-color: #000000;
+            color: #fff;
+            border: none;
+            padding: 10px;
+            margin-bottom: 15px; /* Add spacing between buttons */
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .container button:hover {
+            background-color: #ff0000;
+        }
+
+        .table_container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .table_container input[type="text"] {
+            width: 70%;
+            padding: 8px;
+            margin-bottom: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: 80%;
+            padding: 8px;
+            margin-bottom: 15px;
+        }
+
+
+        .filter-container {
+            background-color: #fff;
+            padding: 20px;
+            width: 90%;
+            text-align: left;
+        }
+
+        /* Flash message container */
+        .flashes-container {
+            width: 100%;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        /* Flash message list */
+        .flashes {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        /* Flash message item */
+        .flashes li {
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+            display: inline-block;
+            width: 100%;
+        }
+
+        /* Success message */
+        .flashes .success {
+            background-color: #4CAF50; /* Green */
+            color: #ffffff; /* White */
+        }
+
+        /* Info message */
+        .flashes .info {
+            background-color: #F44336; 
+            color: #ffffff; /* White */
+        }
+
+        /* Error message */
+        .flashes .error {
+            background-color: #2196F3 /* Blue */
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <a href="/">Home</a>
+        <a href="/raw_materials">Raw Material</a>
+        <a href="/packaging_materials">Packaging Material</a>
+        <a href="/finished_products">Finished Products</a>
+        <a href="/work_order">Work Orders</a>
+        <a href="/user_options">User Options</a>
+        <a href="/logout">Logout</a>
+    </div>
+
+    <!-- Add this section at the top of your HTML template -->
+    <div class="flashes-container">
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <ul class="flashes">
+            {% for message in messages %}
+            <li class="{{ message[1] }}">{{ message[0] }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% endwith %}
+    </div>
+
+    <div class="container">
+        <h1>Receive Materials</h1>
+
+        <!-- Form to receive materials -->
+        <form method="post" action="/receive_pm">
+            <label for="material_name">Material Name:</label>
+            <br><br>
+            <input type="text" id="material_name" name="material_name" list="material_nameOptions" required placeholder="Enter Material Name...">
+            <datalist id="material_nameOptions">
+                {% for material in material_names %}
+                    <option value="{{ material }}">{{ material }}</option>
+                {% endfor %}
+            </datalist>
+            <label for="quantity_received">Quantity Received:</label>
+            <br><br>
+            <input type="number" id="quantity_received" name="quantity_received" required placeholder="Enter Quantity Recived...">
+            <br><br>
+
+
+            <button type="submit">Receive Materials</button>
+        </form>
+    </div>
+
+    <div class="table_container">
+        <h1>Packaging Material Table</h1>
+        <label for="showRemoved">Show Removed</label>
+        <input type="checkbox" id="showRemoved" onchange="toggleRemoved()">
+        <br><br>
+
+        <div class="filter-container">
+            <label for="filterMaterialName">Filter by Material Name:</label>
+            <input type="text" id="filterMaterialName" onkeyup="filterTable()" placeholder="Search for Material Names...">
+            <br>
+            <label for="filterQuantity">Filter by Quantity:</label>
+            <input type="text" id="filterQuantity" onkeyup="filterTable()" placeholder="Search for Quantity...">
+            <br>
+            <label for="filterCost">Filter by Cost:</label>
+            <input type="text" id="filterCost" onkeyup="filterTable()" placeholder="Search for Cost...">
+            <br>
+            <label for="filterAssociatedCodes">Filter by Associated Codes:</label>
+            <input type="text" id="filterAssociatedCodes" onkeyup="filterTable()" placeholder="Search for Associated Codes...">
+            <br>
+            <label for="filterRemoved">Filter by Removed:</label>
+            <input type="text" id="filterRemoved" onkeyup="filterTable()" placeholder="Search for Removed...">
+        </div>
+        <br><br>
+
+        <!-- Table for existing packaging materials -->
+        <table id='packagingMaterialTable' border="1">
+            <thead>
+                <tr>
+                    <th>Material ID</th>
+                    <th>Material Name</th>
+                    <th>Quantity</th>
+                    <th>Cost</th>
+                    <th>Associated Codes</th>
+                    <th>Removed</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in data %}
+                <tr class="{% if row.REMOVED == 'T' %}removedRow{% endif %}">
+                    <td>{{ row.MATERIALID }}</td>
+                    <td>{{ row.NAME }}</td>
+                    <td>{{ row.QUANTITY }}</td>
+                    <td>{{ row.COST }}</td>
+                    <td>{{ row.ASSOCIATED_CODES }}</td>
+                    <td>{{ row.REMOVED }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        function filterTable() {
+            const filterMaterialName = document.getElementById("filterMaterialName").value.toUpperCase();
+            const filterQuantity = document.getElementById("filterQuantity").value.toUpperCase();
+            const filterCost = document.getElementById("filterCost").value.toUpperCase();
+            const filterAssociatedCodes = document.getElementById("filterAssociatedCodes").value.toUpperCase();
+            const filterRemoved = document.getElementById("filterRemoved").value.toUpperCase();
+
+            const table = document.getElementById("packagingMaterialTable");
+            const rows = table.getElementsByTagName("tr");
+
+            for (let i = 1; i < rows.length; i++) {
+                const cells = rows[i].getElementsByTagName("td");
+                const materialName = cells[1].textContent.trim().toUpperCase();
+                const quantity = cells[2].textContent.trim().toUpperCase();
+                const cost = cells[3].textContent.trim().toUpperCase();
+                const associated_codes = cells[4].textContent.trim().toUpperCase();
+                const removedData = cells[5].textContent.trim().toUpperCase();
+
+                const materialNameMatch = materialName.includes(filterMaterialName);
+                const filterQuantityMatch = quantity.includes(filterQuantity);
+                const filterCostMatch = cost.includes(filterCost);
+                const filterAssociatedCodesMatch = associated_codes.includes(filterAssociatedCodes);
+                const removedMatch = removedData.includes(filterRemoved);
+
+                rows[i].style.display = materialNameMatch && filterQuantityMatch && filterCostMatch && filterAssociatedCodesMatch && removedMatch ? "" : "none";
+            }
+        }
+
+        function toggleRemoved() {
+            const showRemoved = document.getElementById("showRemoved").checked;
+            const rows = document.querySelector(".table_container").getElementsByTagName("tr");
+
+            for (let i = 1; i < rows.length; i++) {
+                const removedCell = rows[i].querySelector('td:last-child');
+                if (showRemoved || removedCell.textContent.trim() === 'F') {
+                    rows[i].style.display = "table-row";
+                } else {
+                    rows[i].style.display = "none";
+                }
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            document.getElementById("showRemoved").addEventListener("change", toggleRemoved);
+            toggleRemoved();
+        });
+    </script>
+</body>
+</html>

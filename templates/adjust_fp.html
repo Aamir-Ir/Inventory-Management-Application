@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Adjust Raw Materials</title>
+    <style>
+                body {
+            font-family: Century, sans-serif;
+            font-size: 20px;
+            background-color: #e6e6e6;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .navbar {
+            background-color: #333;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .navbar a {
+            float: left;
+            display: block;
+            color: white;
+            text-align: center;
+            padding: 14px 16px;
+            text-decoration: none;
+        }
+
+        .navbar a:hover {
+            background-color: #ff0000;
+            color: black;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+            width: 40%;
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .container a {
+            text-decoration: none;
+        }
+
+        .container button {
+            width: 40%;
+            font-size: 15px;
+            background-color: #000000;
+            color: #fff;
+            border: none;
+            padding: 10px;
+            margin-bottom: 15px; /* Add spacing between buttons */
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .container button:hover {
+            background-color: #ff0000;
+        }
+
+        .table_container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .table_container input[type="text"] {
+            width: 70%;
+            padding: 8px;
+            margin-bottom: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: 80%;
+            padding: 8px;
+            margin-bottom: 15px;
+        }
+
+
+        .filter-container {
+            background-color: #fff;
+            padding: 20px;
+            width: 90%;
+            text-align: left;
+        }
+
+        /* Flash message container */
+        .flashes-container {
+            width: 100%;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        /* Flash message list */
+        .flashes {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        /* Flash message item */
+        .flashes li {
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+            display: inline-block;
+            width: 100%;
+        }
+
+        /* Success message */
+        .flashes .success {
+            background-color: #4CAF50; /* Green */
+            color: #ffffff; /* White */
+        }
+
+        /* Info message */
+        .flashes .info {
+            background-color: #F44336; 
+            color: #ffffff; /* White */
+        }
+
+        /* Error message */
+        .flashes .error {
+            background-color: #2196F3 /* Blue */
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <a href="/">Home</a>
+        <a href="/raw_materials">Raw Material</a>
+        <a href="/packaging_materials">Packaging Material</a>
+        <a href="/finished_products">Finished Products</a>
+        <a href="/work_order">Work Orders</a>
+        <a href="/user_options">User Options</a>
+        <a href="/logout">Logout</a>
+    </div>
+
+    <!-- Add this section at the top of your HTML template -->
+    <div class="flashes-container">
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <ul class="flashes">
+            {% for message in messages %}
+            <li class="{{ message[1] }}">{{ message[0] }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% endwith %}
+    </div>
+
+    <div class="container">
+        <h1>Adjust Finished Products</h1>
+
+        <!-- Form to adjust products -->
+        <form method="post" action="/adjust_fp">
+            <label for="product_name">Product Name:</label>
+            <br><br>
+            <input type="text" id="product_name" name="product_name" list="product_nameOptions" required placeholder="Enter Product Name...">
+            <datalist id="product_nameOptions">
+                {% for product in product_names %}
+                    <option value="{{ product }}">{{ product }}</option>
+                {% endfor %}
+            </datalist>
+            <br>
+            <label for="new_quantity">Adjust Value To:</label>
+            <br><br>
+            <input type="number" id="new_quantity" name="new_quantity" required placeholder="Enter New Value...">
+            <br><br>
+
+
+            <button type="submit">Adjust Value</button>
+        </form>
+    </div>
+
+    <div class="table_container">
+        <h1>Finished Products Table</h1>
+        <label for="showRemoved">Show Removed</label>
+        <input type="checkbox" id="showRemoved" onchange="toggleRemoved()">
+        <br><br>
+
+        <div class="filter-container">
+            <label for="filterProductCode">Filter by Product Code:</label>
+            <input type="text" id="filterProductCode" onkeyup="filterTable()" placeholder="Search for Product Codes...">
+            <br>
+            <label for="filterProductName">Filter by Product Names:</label>
+            <input type="text" id="filterProductName" onkeyup="filterTable()" placeholder="Search for Product Names...">
+            <br>
+            <label for="filterCost">Filter by Cost:</label>
+            <input type="text" id="filterCost" onkeyup="filterTable()" placeholder="Search for Cost...">
+            <br>
+            <label for="filterUnits">Filter by Units:</label>
+            <input type="text" id="filterUnits" onkeyup="filterTable()" placeholder="Search for Units...">
+            <br>
+            <label for="filterQuantity">Filter by Quantity:</label>
+            <input type="text" id="filterQuantity" onkeyup="filterTable()" placeholder="Search for Quantity...">
+            <br>
+            
+            <label for="filterPrice">Filter by Price:</label>
+            <input type="text" id="filterPrice" onkeyup="filterTable()" placeholder="Search for Price...">
+            <br>
+
+            <label for="filterRemoved">Filter by Removed:</label>
+            <input type="text" id="filterRemoved" onkeyup="filterTable()" placeholder="Search for Removed...">
+        </div>
+        <br><br>
+    
+        <!-- Table for existing finished product -->
+        <table id='finishedProductTable' border="1">
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Product Name</th>
+                    <th>Cost</th>
+                    <th>Units</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Removed</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in data %}
+                <tr class="{% if row.REMOVED == 'T' %}removedRow{% endif %}">
+                    <td>{{ row.CODE }}</td>
+                    <td>{{ row.PRODUCTNAME }}</td>
+                    <td>{{ row.COST }}</td>
+                    <td>{{ row.UNIT }}</td>
+                    <td>{{ row.QUANTITY }}</td>
+                    <td>{{ row.PRICE }}</td>
+                    <td>{{ row.REMOVED }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <script>
+        function filterTable() {
+            const filterProductCode = document.getElementById("filterProductCode").value.toUpperCase();
+            const filterProductName = document.getElementById("filterProductName").value.toUpperCase();
+            const filterUnits = document.getElementById("filterUnits").value.toUpperCase();
+            const filterQuantity = document.getElementById("filterQuantity").value.toUpperCase();
+            const filterCost = document.getElementById("filterCost").value.toUpperCase();
+            const filterPrice = document.getElementById("filterPrice").value.toUpperCase();
+            const filterRemoved = document.getElementById("filterRemoved").value.toUpperCase();
+
+            const table = document.getElementById("finishedProductTable");
+            const rows = table.getElementsByTagName("tr");
+
+            for (let i = 1; i < rows.length; i++) {
+                const cells = rows[i].getElementsByTagName("td");
+                const productCode = cells[0].textContent.trim().toUpperCase(); // Adjusted index to 0 for Product Code
+                const productName = cells[1].textContent.trim().toUpperCase(); // Adjusted index to 1 for Product Name
+                const cost = cells[2].textContent.trim().toUpperCase(); // Adjusted index to 2 for Cost
+                const unitName = cells[3].textContent.trim().toUpperCase(); // Adjusted index to 3 for Units
+                const quantity = cells[4].textContent.trim().toUpperCase(); // Adjusted index to 4 for Quantity
+                const price = cells[5].textContent.trim().toUpperCase(); // Adjusted index to 5 for Price
+                const removedData = cells[6].textContent.trim().toUpperCase(); // Adjusted index to 6 for Removed
+
+                const productCodeMatch = productCode.includes(filterProductCode);
+                const productNameMatch = productName.includes(filterProductName);
+                const filterUnitsMatch = unitName.includes(filterUnits);
+                const filterQuantityMatch = quantity.includes(filterQuantity);
+                const filterCostMatch = cost.includes(filterCost);
+                const filterPriceMatch = price.includes(filterPrice);
+                const removedMatch = removedData.includes(filterRemoved);
+
+                rows[i].style.display = productCodeMatch && productNameMatch && filterUnitsMatch && filterQuantityMatch && filterCostMatch && filterPriceMatch && removedMatch ? "" : "none";
+            }
+        }
+
+
+        function toggleRemoved() {
+            const showRemoved = document.getElementById("showRemoved").checked;
+            const rows = document.querySelector(".table_container").getElementsByTagName("tr");
+
+            for (let i = 1; i < rows.length; i++) {
+                const removedCell = rows[i].querySelector('td:last-child');
+                if (showRemoved || removedCell.textContent.trim() === 'F') {
+                    rows[i].style.display = "table-row";
+                } else {
+                    rows[i].style.display = "none";
+                }
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            document.getElementById("showRemoved").addEventListener("change", toggleRemoved);
+            toggleRemoved();
+        });
+
+        function sanitizeInput(inputElement) {
+            inputElement.value = inputElement.value.replace(/\s*,\s*/g, ',');
+        }
+
+    </script>
+</body>
+</html>

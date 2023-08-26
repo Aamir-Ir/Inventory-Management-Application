@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Work Order Status</title>
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        body {
+            font-family: Century, sans-serif;
+            font-size: 20px;
+            background-color: #e6e6e6;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .navbar {
+            background-color: #333;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .navbar a {
+            float: left;
+            display: block;
+            color: white;
+            text-align: center;
+            padding: 14px 16px;
+            text-decoration: none;
+        }
+
+        .navbar a:hover {
+            background-color: #ff0000;
+            color: black;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+            width: 50%;
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .container a {
+            text-decoration: none;
+        }
+
+        /* Create a grid layout for form elements */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); /* Two columns */
+            gap: 20px; /* Gap between grid items */
+        }
+
+        .form-group {
+            text-align: left;
+        }
+
+        .form-group label {
+            font-weight: bold;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="number"] {
+            width: 90%; /* Make inputs and select full width of their container */
+            padding: 8px;
+            margin-bottom: 15px;
+        }
+
+        .form-group select {
+            width: 95%; /* Make inputs and select full width of their container */
+            padding: 8px;
+            margin-bottom: 15px;
+        }
+
+        .container button {
+            width: 40%;
+            font-size: 15px;
+            background-color: #000000;
+            color: #fff;
+            border: none;
+            padding: 10px;
+            margin-bottom: 15px; /* Add spacing between buttons */
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .container button:hover {
+            background-color: #ff0000;
+        }
+
+        .table_container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .table_container input[type="text"] {
+            width: 70%;
+            padding: 8px;
+            margin-bottom: 15px;
+        }
+
+        .filter-container {
+            background-color: #fff;
+            padding: 20px;
+            width: 90%;
+            text-align: left;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: 80%;
+            padding: 8px;
+            margin-bottom: 15px;
+        }
+
+        select {
+            width: 83%;
+            padding: 8px;
+            margin-bottom: 15px;
+        }
+
+        /* Flash message container */
+        .flashes-container {
+            width: 100%;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        /* Flash message list */
+        .flashes {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        /* Flash message item */
+        .flashes li {
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+            display: inline-block;
+            width: 100%;
+        }
+
+        /* Success message */
+        .flashes .success {
+            background-color: #4CAF50; /* Green */
+            color: #ffffff; /* White */
+        }
+
+        /* Info message */
+        .flashes .info {
+            background-color: #F44336; 
+            color: #ffffff; /* White */
+        }
+
+        /* Error message */
+        .flashes .error {
+            background-color: #2196F3 /* Blue */
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <a href="/">Home</a>
+        <a href="/raw_materials">Raw Material</a>
+        <a href="/packaging_materials">Packaging Material</a>
+        <a href="/finished_products">Finished Products</a>
+        <a href="/work_order">Work Orders</a>
+        <a href="/user_options">User Options</a>
+        <a href="/logout">Logout</a>
+    </div>
+
+    <!-- Add this section at the top of your HTML template -->
+    <div class="flashes-container">
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <ul class="flashes">
+            {% for message in messages %}
+            <li class="{{ message[1] }}">{{ message[0] }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% endwith %}
+    </div>
+
+    <div class="container">
+        <h1 class="page-header">Update Work Order Status</h1>
+            <form method="post" action="/work_order_status">
+                <!-- <label for="contact_name">Customer Contact Name:</label>
+                <input type="text" id="contact_name" name="contact_name" required placeholder="Enter Customer Name...">
+                <br> -->
+
+                <label for="contact_name">Customer Contact Name:</label>
+                <input type="text" id="contact_name" name="contact_name" list="contact_nameOptions" required placeholder="Enter Contact Name...">
+                <datalist id="contact_nameOptions">
+                    {% for contact in contact_list %}
+                        <option value="{{ contact }}">{{ contact }}</option>
+                    {% endfor %}
+                </datalist>
+                <br>
+
+
+                <label for="status_update">Status Update:</label>
+                <select id="status_update" name="status_update" required>
+                    <option value="In-Progress">In-Progress</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Cancelled">Cancelled</option>
+                </select>
+                <br><br>
+
+                <button type="submit">Update Work Order Status</button>
+            </form>
+    </div>
+
+    <div class="table_container">
+        <h2>Work Order Table</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Work Order ID</th>
+                    <th>Contact Name</th>
+                    <th>Created On</th>
+                    <th>Due By</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Loop through your work orders data here -->
+                {% for work_order in data %}
+                    <tr>
+                        <td>{{ work_order.WORK_ORDER_ID }}</td>
+                        <td>{{ work_order.CONTACT_NAME }}</td>
+                        <td>{{ work_order.CREATED_ON }}</td>
+                        <td>{{ work_order.DUE_BY }}</td>
+                        <td>{{ work_order.STATUS }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
