@@ -64,12 +64,10 @@ Create the required tables in your SQL Server database. Execute the following SQ
     QUANTITY INT NOT NULL,
     ASSOCIATED_CODES NVARCHAR(MAX) NOT NULL,
     REMOVED CHAR(1) NOT NULL
-);
-
-
+   );
    -- Reset identity seed for RAWMATERIALS table
    DBCC CHECKIDENT ('RAWMATERIALS', RESEED, 0);
-    ```
+   ```
 
 3. **Packaging Materials Table**:
 
@@ -81,12 +79,10 @@ Create the required tables in your SQL Server database. Execute the following SQ
     QUANTITY INT NOT NULL,
     ASSOCIATED_CODES NVARCHAR(MAX) NOT NULL,
     REMOVED CHAR(1) NOT NULL
-);
-
-
+   );
    -- Reset identity seed for PACKAGINGMATERIALS table
    DBCC CHECKIDENT ('PACKAGINGMATERIALS', RESEED, 0);
-    ```
+   ```
 
 4. **RAWMATERIALASSOCIATION Table**:
 
@@ -97,12 +93,10 @@ Create the required tables in your SQL Server database. Execute the following SQ
     CODE NVARCHAR(50) NOT NULL,
     FOREIGN KEY (RAWMATERIALID) REFERENCES RAWMATERIALS (MATERIALID),
     FOREIGN KEY (CODE) REFERENCES FinishedProduct (CODE)
-);
-
-
+   );
    -- Reset identity seed for RAWMATERIALASSOCIATION table
    DBCC CHECKIDENT ('RAWMATERIALASSOCIATION', RESEED, 0);
-    ```
+   ```
 
 5. **PACKAGINGMATERIALASSOCIATION Table**:
 
@@ -113,12 +107,10 @@ Create the required tables in your SQL Server database. Execute the following SQ
     CODE NVARCHAR(50) NOT NULL,
     FOREIGN KEY (PACKAGINGMATERIALID) REFERENCES PACKAGINGMATERIALS (MATERIALID),
     FOREIGN KEY (CODE) REFERENCES FinishedProduct (CODE)
-);
-
-
+   );
    -- Reset identity seed for PACKAGINGMATERIALASSOCIATION table
    DBCC CHECKIDENT ('PACKAGINGMATERIALASSOCIATION', RESEED, 0);
-    ```
+   ```
 
 6. **USERS Table**:
 
@@ -129,12 +121,10 @@ Create the required tables in your SQL Server database. Execute the following SQ
     PASSWORD NVARCHAR(255) NOT NULL,
     PRIVEILEGE NVARCHAR(255) NOT NULL,
     REMOVED CHAR(1) NOT NULL
-);
-
-
+   );
    -- Reset identity seed for USERS table
    DBCC CHECKIDENT ('USERS', RESEED, 0);
-    ```
+   ```
 
 7. **UNITS_RM Table**:
 
@@ -143,12 +133,10 @@ Create the required tables in your SQL Server database. Execute the following SQ
     UNITID INT PRIMARY KEY IDENTITY(1,1),
     NAME NVARCHAR(255) NOT NULL UNIQUE,
     REMOVED CHAR(1) NOT NULL
-);
-
-
+   );
    -- Reset identity seed for UNITS_RM table
    DBCC CHECKIDENT ('UNITS_RM', RESEED, 0);
-    ```
+   ```
 
 8. **UNITS_FP Table**:
 
@@ -157,12 +145,12 @@ Create the required tables in your SQL Server database. Execute the following SQ
     UNITID INT PRIMARY KEY IDENTITY(1,1),
     NAME NVARCHAR(255) NOT NULL UNIQUE,
     REMOVED CHAR(1) NOT NULL
-);
+   );
 
 
    -- Reset identity seed for UNITS_FP table
    DBCC CHECKIDENT ('UNITS_FP', RESEED, 0);
-    ```
+   ```
 
 9. **CUSTOMERS Table**:
 
@@ -175,8 +163,8 @@ Create the required tables in your SQL Server database. Execute the following SQ
     EMAIL_ADDRESS NVARCHAR(255) NOT NULL UNIQUE,
     SHIPPING_ADDRESS NVARCHAR(255) NOT NULL,
     REMOVED CHAR(1) NOT NULL
-);
-
+   );
+   ```
 10. **WORK_ORDERS_INFO Table**:
 
    ```sql
