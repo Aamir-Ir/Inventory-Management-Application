@@ -47,6 +47,13 @@ def getdataForUsers():
     cursor.close()
     return data
 
+def getAuditTrail():
+    cursor = conn.cursor()
+    cursor.execute(f"SELECT * FROM AUDIT_TRAIL")
+    data = cursor.fetchall()
+    cursor.close()
+    return data
+
 def sdropDown(table, dropDown):
     cursor = conn.cursor()
     cursor.execute(f"SELECT {dropDown} FROM {table} WHERE Removed = 'F'")
@@ -97,7 +104,13 @@ def get_user_privilege(username):
     finally:
         cursor.close()
 
+def audit_trail_change(username, type, change):
+    changed_on = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+    cursor = conn.cursor()
 
+    cursor.execute("INSERT INTO AUDIT_TRAIL (USERNAME, TYPE, CHANGE, CHANGED_ON) VALUES (?, ?, ?, ?)", (username, type, change, changed_on))
+    cursor.commit()
+    cursor.close()
 
 @app.route('/')
 def index():
@@ -143,8 +156,10 @@ def login():
 
         if user and (user.password == hash_password(password)):
             session['username'] = user.username  # Store the username in the session
+            audit_trail_change(username, "Login", "Login Successful")
             return redirect(url_for('index'))
         else:
+            audit_trail_change(username, "Login", "Login Failed")
             error_message = "Invalid Credentials. Please Try Again."
     
     cursor.close()
@@ -158,9 +173,11 @@ def logout():
     '''
     
     if request.method == 'POST':
+        audit_trail_change(session.get('username'), "Logout", "Logout Successful")
         session.pop('username', None)
         return redirect(url_for('login'))
     else:
+        audit_trail_change(session.get('username'), "Logout", "Logout Successful")
         session.pop('username', None)
         return redirect(url_for('index'))
 
@@ -224,10 +241,11 @@ def receive_raw_material():
                     conn.commit()
 
                     flash(("Successfully Received {} Units of {} Into Inventory.".format(quantity_received, material_name), "success"))
-
+                    audit_trail_change(session.get('username'), "Recieve RM", "Successfully Received {} Units of {} Into Inventory.".format(quantity_received, material_name))
                 except Exception as e:
                     conn.rollback()
                     flash(("Error Receiving Raw Material: {}. Contact IT For Assistance With Raw Materials.".format(str(e)), "error"))
+                    audit_trail_change(session.get('username'), "Recieve RM", "Error Receiving Raw Material: {}. Contact IT For Assistance With Raw Materials.".format(str(e)))
                 finally:
                     cursor.close()
 
@@ -281,12 +299,16 @@ def use_raw_material():
                         conn.commit()
 
                         flash(("Successfully Used {} Units of {}.".format(quantity_used, material_name), "success"))
+
+                        audit_trail_change(session.get('username'), "Use RM", "Successfully Used {} Units of {}.".format(quantity_used, material_name))
                     else:
+                        audit_trail_change(session.get('username'), "Use RM", "Insufficient quantity of {} available.".format(material_name))
                         flash(("Insufficient quantity of {} available.".format(material_name), "info"))
 
                 except Exception as e:
                     conn.rollback()
                     flash(("Error Using Raw Material: {}. Contact IT For Assistance With Raw Materials.".format(str(e)), "error"))
+                    audit_trail_change(session.get('username'), "Use RM", "Error Using Raw Material: {}. Contact IT For Assistance With Raw Materials.".format(str(e)))
                 finally:
                     cursor.close()
 
@@ -342,10 +364,11 @@ def adjust_raw_material():
                     conn.commit()
 
                     flash(("Successfully Adjusted Quantity of {} to {}.".format(material_name, new_quantity), "success"))
-
+                    audit_trail_change(session.get('username'), "Adjust RM", "Successfully Adjusted Quantity of {} to {}.".format(material_name, new_quantity))
                 except Exception as e:
                     conn.rollback()
                     flash(("Error Adjusting Raw Material Quantity: {}. Contact IT For Assistance With Raw Materials.".format(str(e)), "error"))
+                    audit_trail_change(session.get('username'), "Adjust RM", "Error Adjusting Raw Material Quantity: {}. Contact IT For Assistance With Raw Materials.".format(str(e)))
                 finally:
                     cursor.close()
 
@@ -419,7 +442,7 @@ def add_new_raw_material():
                 cursor.execute("INSERT INTO RAWMATERIALS (NAME, COST, UNITS, QUANTITY, ASSOCIATED_CODES, REMOVED) VALUES (?, ?, ?, ?, ?, ?)",
                                 (material_name, cost, units, quantity, associated_codes_str, 'F'))
                 conn.commit()
-
+    
                 # Retrieve the MATERIALID of the newly inserted raw material
                 cursor.execute("SELECT MATERIALID FROM RAWMATERIALS WHERE NAME = ?", (material_name,))
                 raw_material_id = cursor.fetchone()[0]  # Access the first column which contains 'MATERIALID'
@@ -469,12 +492,15 @@ def add_new_raw_material():
                     # Check associated_codes_inserted to determine whether to display a success message for the second insertion
                     if not associated_codes or associated_codes_inserted:
                         flash(("Raw Material And Associated Codes Added Successfully", "success"))
+                        audit_trail_change(session.get('username'), "Add New RM", "Successfully Inserted {}, and associated to {}".format(material_name, associated_codes_str))
                 else:
                     flash(("Raw Material Not Added. Please Check The Input.", "info"))
+                    audit_trail_change(session.get('username'), "Add New RM", "Failed to Add {}, and associated to {}".format(material_name, associated_codes_str))
 
             except Exception as e:
                 conn.rollback()
                 flash(("Error Adding Raw Material: " + str(e) + " Contact IT database error for restoring Raw Materials in table RAWMATERIALS", "error"))
+                audit_trail_change(session.get('username'), "Add New RM", "Error Adding Raw Material: " + str(e) + " Contact IT database error for restoring Raw Materials in table RAWMATERIALS")
             finally:
                 cursor.close()
 
@@ -523,12 +549,15 @@ def delete_existing_raw_material_entry():
 
                     if cursor.rowcount > 0:
                         flash(("Raw Material Deleted Successfully", "success"))
+                        audit_trail_change(session.get('username'), "Remove RM", "Raw Material {} Deleted Successfully".format(material_name_to_delete))
                     else:
                         flash(("Raw Material Not Deleted. Please Check The Input.", "info"))
+                        audit_trail_change(session.get('username'), "Remove RM", "Raw Material {} Not Deleted. Please Check The Input.".format(material_name_to_delete))
 
             except Exception as e:
                 conn.rollback()
                 flash(("Error Deleting Raw Material: " + str(e) + "Contact IT database error for restoring Raw Materials in table RAWMATERIALS Table & its Dependencies", "error"))
+                audit_trail_change(session.get('username'), "Remove RM", "Error Deleting Raw Material: " + str(e) + "Contact IT database error for restoring Raw Materials in table RAWMATERIALS Table & its Dependencies")
             finally:
                 cursor.close()
 
@@ -575,8 +604,10 @@ def restore_existing_raw_material_entry():
 
                     if cursor.rowcount > 0:
                         flash(("Raw Material Restored Successfully", "success"))
+                        audit_trail_change(session.get('username'), "Restore RM", "Raw Material {} Restored Successfully".format(material_name_to_restore))
                     else:
                         flash(("Raw Material Not Restored. Please Check The Input.", "info"))
+                        audit_trail_change(session.get('username'), "Restore RM", "Raw Material {} Not Restored".format(material_name_to_restore))
 
             except Exception as e:
                 conn.rollback()
@@ -673,6 +704,7 @@ def update_associations_raw_material():
                                 conn.commit()
 
                                 flash(("Associations Added Successfully", "success"))
+                                audit_trail_change(session.get('username'), "Update Associations RM", "Associations {} Added Successfully to {}".format(new_associated_codes_str, material_name))
 
                         else:
                             flash(("No Associations Provided", "info"))
@@ -707,6 +739,7 @@ def update_associations_raw_material():
                             conn.commit()
 
                             flash(("Associations Deleted Successfully", "success"))
+                            audit_trail_change(session.get('username'),  "Update Associations RM", "Associations {} Removed Successfully to {}".format(new_associated_codes_str, material_name))
                         else:
                             flash(("No Associations Provided for Deletion", "info"))
 
@@ -759,11 +792,13 @@ def manage_units():
                     conn.commit()
                     if cursor.rowcount > 0:
                         flash(("Unit '{}' Added Successfully".format(unit_name), "success"))
+                        audit_trail_change(session.get('username'), "Manage Units RM", "Unit '{}' Added Successfully".format(unit_name))
                     else:
                         flash(("Unit '{}' Not Added. Please Check The Input.".format(unit_name), "info"))
                 except Exception as e:
                     conn.rollback()
                     flash(("Error Adding Unit: " + str(e) + " Contact IT Database Error For Adding Units in Table UNIT_RM", "error"))
+                    audit_trail_change(session.get('username'), "Manage Units RM", "Error Adding Unit: " + str(e) + " Contact IT Database Error For Adding Units in Table UNIT_RM")
                 finally:
                     cursor.close()
             elif action == 'delete':
@@ -773,11 +808,13 @@ def manage_units():
                     conn.commit()
                     if cursor.rowcount > 0:
                         flash(("Unit '{}' Deleted Successfully".format(unit_name), "success"))
+                        audit_trail_change(session.get('username'), "Manage Units RM", "Unit '{}' Deleted Successfully".format(unit_name))
                     else:
                         flash(("Unit '{}' Not Found or Not Deleted. Please Check The Input.".format(unit_name), "info"))
                 except Exception as e:
                     conn.rollback()
                     flash(("Error Deleting Unit: " + str(e) + " Contact IT Database Error For Adding Units in Table UNIT_RM", "error"))
+                    audit_trail_change(session.get('username'), "Manage Units RM", "Error Deleting Unit: " + str(e) + " Contact IT Database Error For Adding Units in Table UNIT_RM")
                 finally:
                     cursor.close()
             elif action == 'restore':
@@ -787,11 +824,13 @@ def manage_units():
                     conn.commit()
                     if cursor.rowcount > 0:
                         flash(("Unit '{}' Restored Successfully".format(unit_name), "success"))
+                        audit_trail_change(session.get('username'), "Manage Units RM", "Unit '{}' Restored Successfully".format(unit_name))
                     else:
                         flash(("Unit '{}' Not Found or Not Restored. Please Check The Input.".format(unit_name), "info"))
                 except Exception as e:
                     conn.rollback()
                     flash(("Error Restoring Unit: " + str(e) + "Contact IT database error for restoring units in table UNIT_RM", "error"))
+                    audit_trail_change(session.get('username'), "Manage Units RM", "Error Restoring Unit: " + str(e) + "Contact IT database error for restoring units in table UNIT_RM")
                 finally:
                     cursor.close()
 
@@ -861,10 +900,12 @@ def receive_packaging_material():
                     conn.commit()
 
                     flash(("Successfully Received {} Units of {} Into Inventory.".format(quantity_received, material_name), "success"))
+                    audit_trail_change(session.get('username'), "Receive PM", "Successfully Received {} Units of {} Into Inventory.".format(quantity_received, material_name))
 
                 except Exception as e:
                     conn.rollback()
                     flash(("Error Receiving Packaging Material: {}. Contact IT For Assistance With Packaging Materials in PACKAGINGMATERIALS Table.".format(str(e)), "error"))
+                    audit_trail_change(session.get('username'), "Receive PM", "Error Receiving Packaging Material: {}. Contact IT For Assistance With Packaging Materials in PACKAGINGMATERIALS Table.".format(str(e)))
                 finally:
                     cursor.close()
 
@@ -918,12 +959,14 @@ def use_packaging_material():
                         conn.commit()
 
                         flash(("Successfully Used {} Units of {}.".format(quantity_used, material_name), "success"))
+                        audit_trail_change(session.get('username'), "Use PM", "Successfully Used {} Units of {}.".format(quantity_used, material_name))
                     else:
                         flash(("Insufficient quantity of {} available.".format(material_name), "info"))
 
                 except Exception as e:
                     conn.rollback()
                     flash(("Error Using Packaging Material: {}. Contact IT For Assistance With Packaging Materials in PACKAGINGMATERIALS Table.".format(str(e)), "error"))
+                    audit_trail_change(session.get('username'), "Use PM", "Error Using Packaging Material: {}. Contact IT For Assistance With Packaging Materials in PACKAGINGMATERIALS Table.".format(str(e)))
                 finally:
                     cursor.close()
 
@@ -979,10 +1022,11 @@ def adjust_packaging_material():
                     conn.commit()
 
                     flash(("Successfully Adjusted Quantity of {} to {}.".format(material_name, new_quantity), "success"))
-
+                    audit_trail_change(session.get('username'), "Adjust PM", "Successfully Adjusted Quantity of {} to {}.".format(material_name, new_quantity))
                 except Exception as e:
                     conn.rollback()
                     flash(("Error Adjusting Packaging Material Quantity: {}. Contact IT For Assistance With Packaging Materials.".format(str(e)), "error"))
+                    audit_trail_change(session.get('username'), "Adjust PM", "Error Adjusting Packaging Material Quantity: {}. Contact IT For Assistance With Packaging Materials.".format(str(e)))
                 finally:
                     cursor.close()
 
@@ -1106,12 +1150,14 @@ def add_new_packaging_material():
                     # Check associated_codes_inserted to determine whether to display a success message for the second insertion
                     if not associated_codes or associated_codes_inserted:
                         flash(("Packaging Material And Associated Codes Added Successfully", "success"))
+                        audit_trail_change(session.get('username'), "Add New PM", "Successfully Added {} and Associated to {}.".format(material_name, associated_codes))
                 else:
                     flash(("Packaging Material Not Added. Please Check The Input.", "info"))
 
             except Exception as e:
                 conn.rollback()
                 flash(("Error Adding Packaging Material: " + str(e) + " Contact IT Database Error For Restoring Packaging Materials in table PACKAGINGMATERIALS", "error"))
+                audit_trail_change(session.get('username'), "Add New PM", "Error Adding Packaging Material: " + str(e) + " Contact IT Database Error For Restoring Packaging Materials in table PACKAGINGMATERIALS")
             finally:
                 cursor.close()
 
@@ -1158,12 +1204,14 @@ def delete_existing_packaging_material_entry():
 
                     if cursor.rowcount > 0:
                         flash(("Packaging Material Deleted Successfully", "success"))
+                        audit_trail_change(session.get('username'), "Delete PM", "Packaging Material {} Deleted Successfully.".format(material_name_to_delete))
                     else:
                         flash(("Packaging Material Not Deleted. Please Check The Input.", "info"))
-
+                        audit_trail_change(session.get('username'), "Delete PM", "Packaging Material {} Not Deleted.".format(material_name_to_delete))
             except Exception as e:
                 conn.rollback()
                 flash(("Error Deleting Packaging Material: " + str(e) + "Contact IT Database Error For Restoring Packaging Materials in table PACKAGINGMATERIALS Table & its Dependencies", "error"))
+                audit_trail_change(session.get('username'), "Delete PM", "Error Deleting Packaging Material: " + str(e) + "Contact IT Database Error For Restoring Packaging Materials in table PACKAGINGMATERIALS Table & its Dependencies")
             finally:
                 cursor.close()
 
@@ -1210,12 +1258,15 @@ def restore_existing_packaging_material_entry():
 
                     if cursor.rowcount > 0:
                         flash(("Packaging Material Restored Successfully", "success"))
+                        audit_trail_change(session.get('username'), "Restore PM", "Packaging Material Restored Successfully")
                     else:
                         flash(("Packaging Material Not Restored. Please Check The Input.", "info"))
+                        audit_trail_change(session.get('username'), "Resotre PM", "Packaging Material Not Restored")
 
             except Exception as e:
                 conn.rollback()
                 flash(("Error Restoring Packaging Material: " + str(e) + "Contact IT Database Error for Restoring Packaging Materials in Table PACKAGINGMATERIALS Table & its Dependencies", "error"))
+                audit_trail_change(session.get('username'), "Resotre PM", "Error Restoring Packaging Material: " + str(e) + "Contact IT Database Error for Restoring Packaging Materials in Table PACKAGINGMATERIALS Table & its Dependencies")
             finally:
                 cursor.close()
 
@@ -1307,6 +1358,7 @@ def update_associations_packaging_material():
                                 conn.commit()
 
                                 flash(("Associations Added Successfully", "success"))
+                                audit_trail_change(session.get('username'), "Update Associations PM", "Packaging Material {} Updated with {}".format(material_name, new_associated_codes_str))
 
                         else:
                             flash(("No Associations Provided", "info"))
@@ -1341,6 +1393,8 @@ def update_associations_packaging_material():
                             conn.commit()
 
                             flash(("Associations Deleted Successfully", "success"))
+                            audit_trail_change(session.get('username'), "Update Associations PM", "Packaging Material {} Removed {}".format(material_name, new_associated_codes_str))
+
                         else:
                             flash(("No Associations Provided for Deletion", "info"))
 
@@ -1417,10 +1471,11 @@ def receive_finished_product():
                     conn.commit()
 
                     flash(("Successfully Received {} Units of {} Into Inventory.".format(quantity_received, product_name), "success"))
-
+                    audit_trail_change(session.get('username'), "Recieve FP", "Successfully Received {} Units of {} Into Inventory.".format(quantity_received, product_name))
                 except Exception as e:
                     conn.rollback()
                     flash(("Error Receiving Finished Products: {}. Contact IT For Assistance With Finished Products.".format(str(e)), "error"))
+                    audit_trail_change(session.get('username'), "Recieve FP", "Error Receiving Finished Products: {}. Contact IT For Assistance With Finished Products.".format(str(e)))
                 finally:
                     cursor.close()
 
@@ -1474,8 +1529,10 @@ def use_finished_product():
                         conn.commit()
 
                         flash(("Successfully Used {} Units of {}.".format(quantity_used, product_name), "success"))
+                        audit_trail_change(session.get('username'), "Use FP", "Successfully Used {} Units of {}.".format(quantity_used, product_name))
                     else:
                         flash(("Insufficient quantity of {} available.".format(product_name), "info"))
+                        audit_trail_change(session.get('username'), "Use FP", "Insufficient quantity of {} available.".format(product_name))
 
                 except Exception as e:
                     conn.rollback()
@@ -1535,10 +1592,11 @@ def adjust_finished_product():
                     conn.commit()
 
                     flash(("Successfully Adjusted Quantity of {} to {}.".format(product_name, new_quantity), "success"))
-
+                    audit_trail_change(session.get('username'), "Adjust FP", "Successfully Adjusted Quantity of {} to {}.".format(product_name, new_quantity))
                 except Exception as e:
                     conn.rollback()
                     flash(("Error Adjusting Finished Product Quantity: {}. Contact IT For Assistance With Finished Products.".format(str(e)), "error"))
+                    audit_trail_change(session.get('username'), "Adjust FP", "Error Adjusting Finished Product Quantity: {}. Contact IT For Assistance With Finished Products.".format(str(e)))
                 finally:
                     cursor.close()
 
@@ -1597,7 +1655,7 @@ def add_new_fp():
                 conn.commit()
 
                 flash(("Finished Product Added Successfully", "success"))
-
+                audit_trail_change(session.get('username'), "Add New FP", "Finished Product {} Added Successfully".format(product_name))
             except Exception as e:
                 conn.rollback()
                 flash(("Error Adding Finished Product: " + str(e) + "Error Raised Could be Database Related.", "error"))
@@ -1648,8 +1706,10 @@ def delete_existing_finished_product_entry():
 
                     if cursor.rowcount > 0:
                         flash(("Finished Product Deleted Successfully", "success"))
+                        audit_trail_change(session.get('username'), "Delete FP", "Finished Product {} Deleted Successfully".format(product_name_to_delete))
                     else:
                         flash(("Finished Product Not Deleted. Please Check The Input.", "info"))
+                        audit_trail_change(session.get('username'), "Delete FP", "Finished Product {} Deleted Successfully".format(product_name_to_delete))
 
             except Exception as e:
                 conn.rollback()
@@ -1701,8 +1761,10 @@ def restore_existing_finished_product():
 
                     if cursor.rowcount > 0:
                         flash(("Finished Product Restored Successfully", "success"))
+                        audit_trail_change(session.get('username'), "Restored FP", "Finished Product {} Restored Successfully".format(product_name_to_restore))
                     else:
                         flash(("Finished Product Not Restored. Please Check The Input.", "info"))
+                        audit_trail_change(session.get('username'), "Restored FP", "Finished Product {} Restored Successfully".format(product_name_to_restore))
 
             except Exception as e:
                 conn.rollback()
@@ -1855,8 +1917,10 @@ def handle_raw_material_associations(cursor, operation, product_code, associated
 
         if operation == 'Add':
             flash(("Associations with Raw Materials Added Successfully", "success"))
+            audit_trail_change(session.get('username'), "Update Associations FP", "Finished Product {} Associated To: {}".format(product_code, updated_associations))
         elif operation == 'Delete':
             flash(("Associations with Raw Materials Deleted Successfully", "success"))
+            audit_trail_change(session.get('username'), "Update Associations FP", "Finished Product {} Removed Association To: {}".format(product_code, updated_associations))
 
     except Exception as e:
         conn.rollback()
@@ -1951,8 +2015,10 @@ def handle_packaging_material_associations(cursor, operation, product_code, asso
 
         if operation == 'Add':
             flash(("Associations with Packaging Materials Added Successfully", "success"))
+            audit_trail_change(session.get('username'), "Update Associations FP", "Finished Product {} Associated To: {}".format(product_code, updated_associations))
         elif operation == 'Delete':
             flash(("Associations with Packaging Materials Deleted Successfully", "success"))
+            audit_trail_change(session.get('username'), "Update Associations FP", "Finished Product {} Removed Association To: {}".format(product_code, updated_associations))
 
     except Exception as e:
         conn.rollback()
@@ -1995,6 +2061,7 @@ def manage_units_fp():
                     conn.commit()
                     if cursor.rowcount > 0:
                         flash(("Unit '{}' Added Successfully".format(unit_name), "success"))
+                        audit_trail_change(session.get('username'), "Manage Units FP", "Unit '{}' Added Successfully".format(unit_name))
                     else:
                         flash(("Unit '{}' Not Added. Please Check The Input.".format(unit_name), "info"))
                 except Exception as e:
@@ -2009,6 +2076,7 @@ def manage_units_fp():
                     conn.commit()
                     if cursor.rowcount > 0:
                         flash(("Unit '{}' Deleted Successfully".format(unit_name), "success"))
+                        audit_trail_change(session.get('username'), "Manage Units FP", "Unit '{}' Deleted Successfully".format(unit_name))
                     else:
                         flash(("Unit '{}' Not Found or Not Deleted. Please Check The Input.".format(unit_name), "info"))
                 except Exception as e:
@@ -2023,6 +2091,7 @@ def manage_units_fp():
                     conn.commit()
                     if cursor.rowcount > 0:
                         flash(("Unit '{}' Restored Successfully".format(unit_name), "success"))
+                        audit_trail_change(session.get('username'), "Manage Units FP", "Unit '{}' Restored Successfully".format(unit_name))
                     else:
                         flash(("Unit '{}' Not Found or Not Restored. Please Check The Input.".format(unit_name), "info"))
                 except Exception as e:
@@ -2151,7 +2220,7 @@ def create_work_order():
 
         if user_privilege == 'Read-Only-User':
             flash(("You As A 'Read-Only-User' Can Only View The Tables In This Program. (Contact Admin/IT If Something is Wrong).", "info"))
-            return render_template('manage_units_fp.html', header=getheader('UNITS_FP'), data=getdata('UNITS_FP'), units=sdropDown('UNITS_FP', 'NAME'))
+            return render_template('work_order.html', header=getheader('UNITS_FP'), data=getdata('UNITS_FP'), units=sdropDown('UNITS_FP', 'NAME'))
         
         if request.method == 'POST':
             # Retrieve contact name and product/quantity data from the form
@@ -2210,7 +2279,7 @@ def create_work_order():
                (contact_name, created_on, due_by, 'In-Progress'))
             conn.commit()
             cursor.close()
-
+            audit_trail_change(session.get('username'), "Created Work Order", "Contact Name '{}' Products: {}".format(contact_name, product_quantity_data))
             # Call check_product_availability to get availability information
             availability_info = check_product_availability(product_quantity_data)
             # cursor.close()
@@ -2416,6 +2485,7 @@ def work_order_status():
                 conn.commit()
                 flash(("Customer '{}' Word Order Updated To '{}' Successfully!".format(contact_name, status_update), "success"))
                 cursor.close()
+                audit_trail_change(session.get('username'), "Work Order Status","Customer '{}' Word Order Updated To '{}' Successfully!".format(contact_name, status_update))
             else:
                 flash(("Customer '{}' Does Not Have A Work Order!".format(contact_name), "info"))
                 cursor.close()
@@ -2456,6 +2526,7 @@ def create_new_customer():
                 conn.commit()
                 cursor.close()
                 flash(("Customer {} Added Successfully!.".format(contact_name), "success"))
+                audit_trail_change(session.get('username'), "Added New Customer", "Customer {} Added Successfully!.".format(contact_name))
                 return render_template('create_new_customer.html', header=getheader('CUSTOMERS'), data=getdata('CUSTOMERS'))
             else:
                 flash(("Customer {} Already Exists!.".format(contact_name), "info"))
@@ -2503,6 +2574,7 @@ def remove_customer():
                 cursor.commit()
                 cursor.close()
                 flash(("Customer '{}' Removed!".format(contact_name), "success"))
+                audit_trail_change(session.get('username'), "Removed Customer", "Customer '{}' Removed!".format(contact_name))
                 return render_template('remove_customer.html', header=getheader('CUSTOMERS'), data=getdata('CUSTOMERS'), contact_list=sdropDown('CUSTOMERS', 'CONTACT_NAME'))
     
         return render_template('remove_customer.html', header=getheader('CUSTOMERS'), data=getdata('CUSTOMERS'), contact_list=sdropDown('CUSTOMERS', 'CONTACT_NAME'))  # You need to create an HTML template for the form
@@ -2546,6 +2618,7 @@ def restore_customer():
                 cursor.commit()
                 cursor.close()
                 flash(("Customer '{}' Restored!".format(contact_name), "success"))
+                audit_trail_change(session.get('username'), "Restored Customer", "Customer '{}' Does Not Exist or May Already Have Been Restored!".format(contact_name))
                 return render_template('restore_customer.html', header=getheader('CUSTOMERS'), data=getdata('CUSTOMERS'), contact_list=inversesdropDown('CUSTOMERS', 'CONTACT_NAME'))
     
         return render_template('restore_customer.html', header=getheader('CUSTOMERS'), data=getdata('CUSTOMERS'), contact_list=inversesdropDown('CUSTOMERS', 'CONTACT_NAME'))  # You need to create an HTML template for the form
@@ -2601,6 +2674,7 @@ def change_password():
                     cursor.execute("UPDATE USERS SET PASSWORD = ? WHERE USERNAME = ?", (hash_password(new_password), current_username))
                     conn.commit()
                     flash(("Password Changed Successfully.", "success"))
+                    audit_trail_change(session.get('username'), "Password Changed", "Change Password Successful")
                 else:
                     flash(("Incorrect Current Password. Password Not Changed.", "info"))
             else:
@@ -2653,8 +2727,9 @@ def create_user():
                 # Update the password in the database with the new password
                 cursor.execute("INSERT INTO USERS (USERNAME, PASSWORD, PRIVEILEGE, REMOVED) VALUES (?, ?, ?, ?)", (new_username, hash_password(new_password), privilege_set, 'F'))
                 conn.commit()
-                flash(("Password changed successfully.", "success"))
+                flash(("User Created successfully.", "success"))
                 cursor.close()
+                audit_trail_change(session.get('username'), "Create User", "New User {} Created Successfully".format(new_username))
                 return render_template('create_user.html', list_privilege=privilege_allowed_to_set, headers=getheader("USERS"), data=getdata("USERS"))
             else:
                 flash(("Password Fields Did Not Match.", "info"))
@@ -2711,7 +2786,7 @@ def manage_privileges():
             conn.commit()
             flash(("Username: {} privilege updated successfully to: {}.".format(userName, privilege_set), "success"))
             cursor.close()
-
+            audit_trail_change(session.get('username'), "Manage User Privileges", "Username: {} privilege updated successfully to: {}.".format(userName, privilege_set))
         return render_template('manage_privileges.html', list_privilege=privilege_allowed_to_set, headers=getheader("USERS"), data=getdata("USERS"), usernames=getDropDownForNonAdminUsers())
     else:
         return redirect(url_for('login'))
@@ -2779,6 +2854,7 @@ def manage_users():
                     cursor.commit()
                     cursor.close()
                     flash(("Username: {} Got Restored.".format(userName), "success"))
+                    audit_trail_change(session.get('username'), "Manage User Privileges", "Username: {} Got Restored.".format(userName))
 
         return render_template('manage_users.html', headers=getheader("USERS"), data=getdataForUsers(), usernames=getDropDownForNonAdminUsers2())
     else:
@@ -2786,8 +2862,33 @@ def manage_users():
 
 
 
+@app.route('/audit_trail', methods=['GET', 'POST'])
+def audit_trail():
+    if 'username' in session:
+
+        # Check if the user has the required privileges (Admin or Manager)
+        user_privilege = get_user_privilege(session['username'])  # You need to implement get_user_privilege function
+
+        if user_privilege == 'Read-Only-User':
+            flash(("You As A 'Read-Only-User' Do Not Have Access To Audit Trail Page. (Contact Admin/IT If Something is Wrong).".format(user_privilege), "info"))
+            return render_template('user_options.html')
+        
+        # Check if the user has the required privileges (Admin or Manager)
+        user_privilege = get_user_privilege(session['username'])  # You need to implement get_user_privilege function
+        if user_privilege not in ['Admin']:
+            flash(("You As A {} Do Not Have The Required Privileges To Perform Manage Users. Ask An Admin.".format(user_privilege), "info"))
+            return render_template('user_options.html')
+
+        if request.method == 'POST':
+            return render_template('audit_trail.html', headers=getheader("AUDIT_TRAIL"), data=getAuditTrail())
+        return render_template('audit_trail.html', headers=getheader("AUDIT_TRAIL"), data=getAuditTrail())
+    else:
+        return redirect(url_for('login'))
+
+
+
 if __name__ == '__main__':
-    print(hash_password('123'))
-    print(hash_password('abc'))
+    # print(hash_password('123'))
+    # print(hash_password('abc'))
     #print(hash_password('Reader0'))
-    app.run(debug=True)
+    app.run(debug=False)

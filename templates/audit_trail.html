@@ -217,62 +217,33 @@
         {% endwith %}
     </div>
 
-    <div class="container">
-        <h1 class="page-header">Update Work Order Status</h1>
-            <form method="post" action="/work_order_status">
-                <!-- <label for="contact_name">Customer Contact Name:</label>
-                <input type="text" id="contact_name" name="contact_name" required placeholder="Enter Customer Name...">
-                <br> -->
-
-                <label for="contact_name">Customer Contact Name:</label>
-                <input type="text" id="contact_name" name="contact_name" list="contact_nameOptions" required placeholder="Enter Contact Name...">
-                <datalist id="contact_nameOptions">
-                    {% for contact in contact_list %}
-                        <option value="{{ contact }}">{{ contact }}</option>
-                    {% endfor %}
-                </datalist>
-                <br>
-
-
-                <label for="status_update">Status Update:</label>
-                <select id="status_update" name="status_update" required>
-                    <option value="In-Progress">In-Progress</option>
-                    <option value="Completed">Completed</option>
-                    <option value="Cancelled">Cancelled</option>
-                </select>
-                <br><br>
-
-                <button type="submit">Update Work Order Status</button>
-            </form>
-    </div>
-
     <div class="table_container">
-        <h2>Work Order Table</h2>
+        <h2>Audit Trail Table</h2>
 
         <div class="filter-container">
             <!-- Filter by Contact Name -->
-            <label for="WOID">Filter by Work Order ID:</label>
-            <input type="text" id="WOID" onkeyup="filterTable()" placeholder="Search for Work Order ID...">
+            <label for="filterAuditID">Filter by Audit ID:</label>
+            <input type="text" id="filterAuditID" onkeyup="filterTable()" placeholder="Search for Audit ID...">
             <br>
 
             <!-- Filter by Company Name -->
-            <label for="filterContacthName">Filter by Contact Name:</label>
-            <input type="text" id="filterContacthName" onkeyup="filterTable()" placeholder="Search for Contact Name...">
+            <label for="filterUsername">Filter by Username:</label>
+            <input type="text" id="filterUsername" onkeyup="filterTable()" placeholder="Search for Username...">
             <br>
 
             <!-- Filter by Phone Number -->
-            <label for="filterCreatedOn">Filter by Created On:</label>
-            <input type="text" id="filterCreatedOn" onkeyup="filterTable()" placeholder="Search for Created On...">
+            <label for="filterFunctionType">Filter by Function Type:</label>
+            <input type="text" id="filterFunctionType" onkeyup="filterTable()" placeholder="Search for Function Type...">
             <br>
 
             <!-- Filter by Email Address -->
-            <label for="filterDueBy">Filter by Due By:</label>
-            <input type="text" id="filterDueBy" onkeyup="filterTable()" placeholder="Search for Email Address...">
+            <label for="filterChange">Filter by Change:</label>
+            <input type="text" id="filterChange" onkeyup="filterTable()" placeholder="Search for Change...">
             <br>
 
             <!-- Filter by Shipping Address -->
-            <label for="filterStatus">Filter by Status:</label>
-            <input type="text" id="filterStatus" onkeyup="filterTable()" placeholder="Search for Status...">
+            <label for="filterChangedOn">Filter by Changed On:</label>
+            <input type="text" id="filterChangedOn" onkeyup="filterTable()" placeholder="Search for Changed On...">
             <br>
         </div>
         <br>
@@ -280,22 +251,22 @@
         <table id="customerTable" border="1">
             <thead>
                 <tr>
-                    <th>Work Order ID</th>
-                    <th>Contact Name</th>
-                    <th>Created On</th>
-                    <th>Due By</th>
-                    <th>Status</th>
+                    <th>Audit_ID</th>
+                    <th>Username</th>
+                    <th>Function Type</th>
+                    <th>Change</th>
+                    <th>Changed On</th>
                 </tr>
             </thead>
             <tbody>
                 <!-- Loop through your work orders data here -->
-                {% for work_order in data %}
+                {% for trail in data %}
                     <tr>
-                        <td>{{ work_order.WORK_ORDER_ID }}</td>
-                        <td>{{ work_order.CONTACT_NAME }}</td>
-                        <td>{{ work_order.CREATED_ON }}</td>
-                        <td>{{ work_order.DUE_BY }}</td>
-                        <td>{{ work_order.STATUS }}</td>
+                        <td>{{ trail.AUDIT_ID }}</td>
+                        <td>{{ trail.USERNAME }}</td>
+                        <td>{{ trail.TYPE }}</td>
+                        <td>{{ trail.CHANGE }}</td>
+                        <td>{{ trail.CHANGED_ON }}</td>
                     </tr>
                 {% endfor %}
             </tbody>
@@ -304,32 +275,33 @@
 
     <script>
         function filterTable() {
-            const filterWOID = document.getElementById("WOID").value.toUpperCase();
-            const filterContacthName = document.getElementById("filterContacthName").value.toUpperCase();
-            const filterCreatedOn = document.getElementById("filterCreatedOn").value.toUpperCase();
-            const filterDueBy = document.getElementById("filterDueBy").value.toUpperCase();
-            const filterStatus = document.getElementById("filterStatus").value.toUpperCase();
+            const filterAuditID = document.getElementById("filterAuditID").value.toUpperCase();
+            const filterUsername = document.getElementById("filterUsername").value.toUpperCase();
+            const filterFunctionType = document.getElementById("filterFunctionType").value.toUpperCase();
+            const filterChange = document.getElementById("filterChange").value.toUpperCase();
+            const filterChangedOn = document.getElementById("filterChangedOn").value.toUpperCase();
     
             const table = document.getElementById("customerTable");
             const rows = table.getElementsByTagName("tr");
     
             for (let i = 1; i < rows.length; i++) {
                 const cells = rows[i].getElementsByTagName("td");
-                const WOID = cells[0].textContent.trim().toUpperCase(); // Adjusted index to 0 for Audit_ID
-                const contactName = cells[1].textContent.trim().toUpperCase(); // Adjusted index to 1 for Username
-                const CreateOn = cells[2].textContent.trim().toUpperCase(); // Adjusted index to 2 for Function Type
-                const DueBY = cells[3].textContent.trim().toUpperCase(); // Adjusted index to 3 for Change
-                const Status = cells[4].textContent.trim().toUpperCase(); // Adjusted index to 4 for Changed On
+                const auditID = cells[0].textContent.trim().toUpperCase(); // Adjusted index to 0 for Audit_ID
+                const username = cells[1].textContent.trim().toUpperCase(); // Adjusted index to 1 for Username
+                const functionType = cells[2].textContent.trim().toUpperCase(); // Adjusted index to 2 for Function Type
+                const change = cells[3].textContent.trim().toUpperCase(); // Adjusted index to 3 for Change
+                const changedOn = cells[4].textContent.trim().toUpperCase(); // Adjusted index to 4 for Changed On
     
-                const auditIDMatch = WOID.includes(filterWOID);
-                const usernameMatch = contactName.includes(filterContacthName);
-                const functionTypeMatch = CreateOn.includes(filterCreatedOn);
-                const changeMatch = DueBY.includes(filterDueBy);
-                const changedOnMatch = Status.includes(filterStatus);
+                const auditIDMatch = auditID.includes(filterAuditID);
+                const usernameMatch = username.includes(filterUsername);
+                const functionTypeMatch = functionType.includes(filterFunctionType);
+                const changeMatch = change.includes(filterChange);
+                const changedOnMatch = changedOn.includes(filterChangedOn);
     
                 rows[i].style.display = auditIDMatch && usernameMatch && functionTypeMatch && changeMatch && changedOnMatch ? "" : "none";
             }
         }
     </script>
+    
 </body>
 </html>
