@@ -49,7 +49,7 @@ Create the required tables in your SQL Server database. Execute the following SQ
     REMOVED CHAR(1) NOT NULL
 );
 
-
+```
    -- Reset identity seed for FINISHEDPRODUCT table
    DBCC CHECKIDENT ('FINISHEDPRODUCT', RESEED, 0);
     ```
