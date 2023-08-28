@@ -11,7 +11,7 @@ This documentation provides a step-by-step guide on how to deploy the given web 
 4. [Deployment Steps](#deployment-steps)
 
 ## 1. Introduction<a name="introduction"></a>
-This web application is built using Flask and relies on various libraries and dependencies to function properly. The application includes multiple files, including Flask code, SQL handling scripts, and HTML templates.
+This web application is built using Flask and relies on various libraries and dependencies to function properly. The application includes multiple files, including Flask code + SQL handling scripts (app.py), and HTML templates.
 
 ## 2. Python Dependencies<a name="dependencies"></a>
 Before deploying the web application, make sure you have the following dependencies installed:
@@ -30,11 +30,10 @@ pip install Flask pyodbc requests aspose.pdf reportlab flask_session
 ```
 
 ## 3. SQL Server Setup<a name="sql-server-setup"></a>
-Before running the web application, ensure that you have a Microsoft SQL Server instance configured and running. Update the connection string in the code to match your SQL Server configuration. Modify the connection string in  `sqlhandle.py`.
+Before running the web application, ensure that you have a Microsoft SQL Server instance configured and running. Update the connection string in the code to match your SQL Server configuration. Modify the connection string in  `app.py` in the try-except block near the top of the program.
 
 ## Tables Creation
 Create the required tables in your SQL Server database. Execute the following SQL queries to create the necessary tables:
-
 
 1. **Finished Product Table**:
 
@@ -65,6 +64,7 @@ Create the required tables in your SQL Server database. Execute the following SQ
     ASSOCIATED_CODES NVARCHAR(MAX) NOT NULL,
     REMOVED CHAR(1) NOT NULL
    );
+
    -- Reset identity seed for RAWMATERIALS table
    DBCC CHECKIDENT ('RAWMATERIALS', RESEED, 0);
    ```
@@ -80,6 +80,7 @@ Create the required tables in your SQL Server database. Execute the following SQ
     ASSOCIATED_CODES NVARCHAR(MAX) NOT NULL,
     REMOVED CHAR(1) NOT NULL
    );
+   
    -- Reset identity seed for PACKAGINGMATERIALS table
    DBCC CHECKIDENT ('PACKAGINGMATERIALS', RESEED, 0);
    ```
@@ -94,6 +95,7 @@ Create the required tables in your SQL Server database. Execute the following SQ
     FOREIGN KEY (RAWMATERIALID) REFERENCES RAWMATERIALS (MATERIALID),
     FOREIGN KEY (CODE) REFERENCES FinishedProduct (CODE)
    );
+   
    -- Reset identity seed for RAWMATERIALASSOCIATION table
    DBCC CHECKIDENT ('RAWMATERIALASSOCIATION', RESEED, 0);
    ```
@@ -108,6 +110,7 @@ Create the required tables in your SQL Server database. Execute the following SQ
     FOREIGN KEY (PACKAGINGMATERIALID) REFERENCES PACKAGINGMATERIALS (MATERIALID),
     FOREIGN KEY (CODE) REFERENCES FinishedProduct (CODE)
    );
+   
    -- Reset identity seed for PACKAGINGMATERIALASSOCIATION table
    DBCC CHECKIDENT ('PACKAGINGMATERIALASSOCIATION', RESEED, 0);
    ```
@@ -122,6 +125,7 @@ Create the required tables in your SQL Server database. Execute the following SQ
     PRIVEILEGE NVARCHAR(255) NOT NULL,
     REMOVED CHAR(1) NOT NULL
    );
+   
    -- Reset identity seed for USERS table
    DBCC CHECKIDENT ('USERS', RESEED, 0);
    ```
@@ -134,6 +138,7 @@ Create the required tables in your SQL Server database. Execute the following SQ
     NAME NVARCHAR(255) NOT NULL UNIQUE,
     REMOVED CHAR(1) NOT NULL
    );
+   
    -- Reset identity seed for UNITS_RM table
    DBCC CHECKIDENT ('UNITS_RM', RESEED, 0);
    ```
@@ -146,7 +151,6 @@ Create the required tables in your SQL Server database. Execute the following SQ
     NAME NVARCHAR(255) NOT NULL UNIQUE,
     REMOVED CHAR(1) NOT NULL
    );
-
 
    -- Reset identity seed for UNITS_FP table
    DBCC CHECKIDENT ('UNITS_FP', RESEED, 0);
@@ -165,6 +169,7 @@ Create the required tables in your SQL Server database. Execute the following SQ
     REMOVED CHAR(1) NOT NULL
    );
    ```
+   
 10. **WORK_ORDERS_INFO Table**:
 
    ```sql
