@@ -47,12 +47,11 @@ Create the required tables in your SQL Server database. Execute the following SQ
     QUANTITY INT NOT NULL,
     PRICE FLOAT NOT NULL,
     REMOVED CHAR(1) NOT NULL
-);
-
-```
+   );
+   
    -- Reset identity seed for FINISHEDPRODUCT table
    DBCC CHECKIDENT ('FINISHEDPRODUCT', RESEED, 0);
-    ```
+   ```
 
   2. **Raw Materials Table**:
 
