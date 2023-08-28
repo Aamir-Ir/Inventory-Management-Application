@@ -168,6 +168,8 @@ Create the required tables in your SQL Server database. Execute the following SQ
     SHIPPING_ADDRESS NVARCHAR(255) NOT NULL,
     REMOVED CHAR(1) NOT NULL
    );
+   -- Reset identity seed for CUSTOMERS table
+   DBCC CHECKIDENT ('CUSTOMERS', RESEED, 0);
    ```
    
 10. **WORK_ORDERS_INFO Table**:
