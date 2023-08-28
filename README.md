@@ -187,6 +187,21 @@ Create the required tables in your SQL Server database. Execute the following SQ
    DBCC CHECKIDENT ('WORK_ORDERS_INFO', RESEED, 0);
    ```
 
+11. **AUDIT_TRAIL Table**:
+
+   ```sql
+   CREATE TABLE AUDIT_TRAIL (
+    AUDIT_ID INT PRIMARY KEY IDENTITY(1,1),
+    USERNAME NVARCHAR(255) NOT NULL,
+    TYPE NVARCHAR(255) NOT NULL,
+    CHANGE NVARCHAR(255) NOT NULL,
+    CHANGED_ON NVARCHAR(255) NOT NULL
+   );
+
+   -- Reset identity seed for AUDIT_TRAIL table
+   DBCC CHECKIDENT ('AUDIT_TRAIL', RESEED, 0);
+   ```
+
 ## 4. Deployment Steps<a name="deployment-steps"></a>
 Follow these steps to deploy the web application:
 
